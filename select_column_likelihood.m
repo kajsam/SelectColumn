@@ -6,7 +6,7 @@ if ~islogical(X) || ~islogical(Z) || ~islogical(mask)
 end
 
 [n, d] = size(X);
-K = size(Z,2)
+K = size(Z,2);
 H = false(K,d);
 % H_compl = false(size(H));
 % Z_compl = ~Z;
