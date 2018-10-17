@@ -26,46 +26,44 @@ end
 
 alpha = alphabeta(1,:);
 beta = alphabeta(2,:);
+t00 = alphabeta(3,:);
+t01 = alphabeta(4,:);
 
 [n, d] = size(X);
 m = size(Z,2);                  % Number of columns in Z
-H = false(m,d);                 % The row vectors that will be made
-loglik = zeros(1,m);            % The measure of increase in likelihood
 
+H = false(m,d);                 % The row vectors that will be made
+
+wask = ~mask;
+
+Lw = zeros(m+1,d);
 for col = 1: m
   w = Z(:,col);
- 
-  % Compare w to all columns in X
-  W = repmat(w,1,d);            % For each column, compared to all columns in X
-  WndX = W == X;                % Which entries are equal
-  WndX(mask) = false;           % These will not count
-  Lw = sum(WndX,1);             % Sum up column-wise
   
-  % Repeat for complement
-  W = repmat(~w,1,d);           
-  WndX = W == X;                
-  WndX(mask) = false;           
-  Lw_c = sum(WndX,1);          
-  
-  % Repeat for zero vector
-  W = false(n,d);           
-  WndX = W == X;   
-  WndX(mask) = false;
-  L0 = sum(WndX,1);  
-    
-  L = [Lw; Lw_c; L0]; %         % Which has more similar entries:
-  [~, idx] = max(L);            % w or a vector of zeros?
-  
-  h = idx==1;                   % If it's w, the entry of h is 1, else 0
-  H(col,:) = h;                 % Keep h
-  eq = X == w*h;                        % Equal entries for W and w*h
-  loglik(col) = sum(sum(eq(~mask)));    % Masked
+  for j = 1: d                  % All the columns in X
+    Lw(col,j) = -sum(t00(~w&wask(:,j))) - sum(t01(w&wask(:,j))) + sum(alpha(X(:,j)&wask(:,j)))+ sum(beta(X(:,j)&w&wask(:,j)));
+  end
   
 end
+% Repeat for zero vector
+for j = 1: d                  % All the columns in X
+  Lw(m+1,j) = -sum(t00(wask(:,j))) +  sum(alpha(X(:,j)&wask(:,j)));
+end
+   
+[~, idx] = max(Lw);          % w, ~w or a vector of zeros?
 
-[~,best_col] = max(loglik);     % Which w*h has most equal entries?
+for col = 1: m
+  H(col,:) = idx == col;                 % Keep h
+  sumh = sum(H,2);
+end
+max(sumh)
+% figure, imagesc(H), colormap(gray), title('H')
+[~,best_col] = max(sumh);     % Which w*h has largest likelihood?
 w = Z(:,best_col);              % Thats' the best column
 h = H(best_col,:);              % and row
 
+% figure, imagesc(w*h), colormap(gray), title(best_col),
+
 Z(:,best_col) = [];             % Remove that column from Z
+
 
