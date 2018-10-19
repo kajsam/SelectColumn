@@ -38,15 +38,34 @@ for col = 1: m
   end    
 end
 
+% Repeat for zero vector
+w = false(n,1);
+for j = 1: d                  % All the columns in X
+  WndX = w == X(:,j);
+  WndX(mask(:,j)) = false;
+  Lw(m+1,j) = sum(WndX);
+end
+
 [~, idx] = max(Lw);          % w  or a vector of zeros?
+
+idx0 = idx == m+1;    % For these columns, a zero vector is best
+mask0 = ~mask;
+mask0(:,idx0) = false;
 
 for col = 1: m
   H(col,:) = idx == col;                 
-  sumh = sum(H,2);
 end
 
-[~,best_col] = max(sumh);     % Which w has most 1's in the h
+crit = zeros(1,m);
+for col = 1: m
+ A = Z(:,col)*H(col,:);
+ eq = A(mask0) == X(mask0);
+ crit(col) = sum(eq(:));
+end
+
+[~,best_col] = max(crit);     % Which w has most 1's in the h
 w = Z(:,best_col);            % That's the "best" column
+sum(w)
 h = H(best_col,:);            % and row
 
 Z(:,best_col) = [];           % Remove that column from Z
