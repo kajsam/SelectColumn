@@ -41,25 +41,26 @@ for col = 1: m
   w = Z(:,col);
   
   for j = 1: d                  % All the columns in X
-    Lw(col,j) = -sum(t00(~w&wask(:,j))) - sum(t01(w&wask(:,j))) + sum(alpha(X(:,j)&wask(:,j)))+ sum(beta(X(:,j)&w&wask(:,j)));
+    Lw(col,j) = -sum(t00(~w&wask(:,j))) - sum(t01(w&wask(:,j))) ...
+        + sum(beta(X(:,j)&w&wask(:,j))); % + sum(alpha(X(:,j)&wask(:,j)))
   end
   
 end
 % Repeat for zero vector
 for j = 1: d                  % All the columns in X
-  Lw(m+1,j) = -sum(t00(wask(:,j))) +  sum(alpha(X(:,j)&wask(:,j)));
+  Lw(m+1,j) = -sum(t00(wask(:,j))); % +  sum(alpha(X(:,j)&wask(:,j)));
 end
    
-[~, idx] = max(Lw);          % w, ~w or a vector of zeros?
+[~, idx] = max(Lw);          % w or a vector of zeros?
 
 for col = 1: m
   H(col,:) = idx == col;                 % Keep h
-  sumh = sum(H,2);
 end
-max(sumh)
+sumh = sum(H,2);
+
 % figure, imagesc(H), colormap(gray), title('H')
-[~,best_col] = max(sumh);     % Which w*h has largest likelihood?
-w = Z(:,best_col);              % Thats' the best column
+[~,best_col] = max(sumh);     % Which h has the most 1's?
+w = Z(:,best_col);              % That's the best column
 h = H(best_col,:);              % and row
 
 % figure, imagesc(w*h), colormap(gray), title(best_col),
