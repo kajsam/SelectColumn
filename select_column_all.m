@@ -1,4 +1,4 @@
-function [w, h, Z] = select_column_all(X,Z,mask)
+function [w, h, Z] = select_column_all(X,Z,mask, min_class)
 
 % Kajsa Mollersen (kajsa.mollersen@uit.no) 15th October 2018
 
@@ -28,20 +28,23 @@ end
 m = size(Z,2);                  % Number of columns in Z
 H = false(m,d);                 % The row vectors that will be made
 
-Lw = zeros(m+1,d);
+wask = ~mask;
+
+Lw = zeros(m,d);
 for col = 1: m
   w = Z(:,col);
   for j = 1: d
-    WndX = w == X(:,j);
-    WndX(mask(:,j)) = false;
+    mask_col = wask(:,j);
+    WndX = w(mask_col) == X(mask_col,j); 
+    % WndX = w == X(:,j); % 
+    % WndX(mask(:,j)) = false;
     Lw(col,j) = sum(WndX);
   end    
 end
 
 % Repeat for zero vector
-w = false(n,1);
 for j = 1: d                  % All the columns in X
-  WndX = w == X(:,j);
+  WndX = ~X(:,j);
   WndX(mask(:,j)) = false;
   Lw(m+1,j) = sum(WndX);
 end
@@ -63,10 +66,31 @@ for col = 1: m
  crit(col) = sum(eq(:));
 end
 
-[~,best_col] = max(crit);     % Which w has most 1's in the h
+[~,best_col] = max(crit);     % Which wh is most similar to X
 w = Z(:,best_col);            % That's the "best" column
-sum(w)
-h = H(best_col,:);            % and row
+h = H(col,:);
 
-Z(:,best_col) = [];           % Remove that column from Z
+Z(:,best_col) = [];
 
+% sum(h)
+% % Delete similar columns
+% del = [];
+% Lweq = Lw;
+% Lweq(best_col,:) = min(Lweq);
+% 
+% [~, idx] = max(Lweq);          % w  or a vector of zeros?
+% for col = 1:m
+%   H(col,:) = idx == col;                 
+% end
+% 
+% for col = 1:m
+%   if sum(H(col,:) & h) == sum(h)
+%     Lweq(col,:) = min(Lweq);
+%     del = [del col]
+%   end
+% end
+%   
+% Lweq(best_col,:) = Lw(best_col);
+% [~, idx] = max(Lweq);          % w  or a vector of zeros?
+% h = idx == best_col;
+% sum(h)
