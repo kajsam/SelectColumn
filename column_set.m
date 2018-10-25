@@ -1,4 +1,10 @@
-function Zsets = column_set(Z)
+function Zsets = column_set(Z, delete_noise)
+
+% Creates a set of columns from Z for each single column of Z
+
+% Input:    Z : candidate columns
+
+% Output:   Zsets : indexes for each set
 
 if ~islogical(Z)
   disp('Logical, please')
@@ -6,15 +12,12 @@ if ~islogical(Z)
 end
 
 [n, nZ] = size(Z);
-sumZ = sum(Z,1);
-[~, idx] = sort(sumZ,'descend');
-Z = Z(:,idx);
-tic
 Zsets = cell(1,nZ);
 for k =  1: nZ
+    
   w = Z(:,k);  
   cand = [];
-  for r = 1 : 50
+  for r = 1 : 100
     w_cand = [w Z(:,cand)];
     w_or_cand = logical(sum(w_cand,2));
     pen = ones(1,nZ)*n;
@@ -36,15 +39,27 @@ for k =  1: nZ
 %       if length(Zsets{k}) > 3
 %         [k cand]
 %       end
-     % figure(55), imagesc(Z(:,[k cand])), colormap(gray)
      
+if delete_noise
+     del = [];
+     for i = 1: length(Zsets{k})
+       if sum(Z(:,Zsets{k}(i)) & logical(sum(Z(:,setdiff(Zsets{k},Zsets{k}(i))),2))) == sum(Z(:,Zsets{k}(i)))
+         del = [del i];
+       end
+       
+     end
+%      if ~isempty(del)
+     %   figure(54), imagesc(Z(:,Zsets{k})), colormap(gray)
+       Zsets{k}(del) = [];
+ %     figure(53), imagesc(Z(:,Zsets{k})), colormap(gray), xlabel(k)
+%   end
+end
       break
     else
       cand = [cand idx];
     end
-    if r == 50
+    if r == 100
         pause
     end
   end
 end
-toc
