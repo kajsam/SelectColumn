@@ -9,23 +9,31 @@ end
 sumZ = sum(Z,1);
 [~, idx] = sort(sumZ,'descend');
 Z = Z(:,idx);
-   
+% figure, subplot(1,3,1), imagesc(Z), colormap(gray)
 keep = false(1,nZ);
-for k = 1 : nZ
-  Zcand = Z(:,k+1:end);
-  del = false(1,nZ);
-  for i = k+1:nZ
+for k = 1 : nZ % Check the columns one by one
+  cand = true(1,nZ);
+  % If the other column overlaps the 0's in the column in question, it is
+  % not a representative
+  for i = k : nZ
     if sum(Z(~Z(:,k),i)) > min_class
-      del(i) = true;
+      cand(i) = false;
     end
   end
-  del(1:k) = [];
-  Zcand(:,del) = [];
-   
-  repr = logical(sum(Zcand,2));
+  cand(1:k) = false;
   
-  if sum(Z(:,k) & repr) < sum(Z(:,k))
+  Zcand = Z(:,cand);
+  repr = logical(sum(Zcand,2));
+%   subplot(1,3,2), imagesc([Z(:,k) repr (Z(:,k) & repr)]), colormap(gray), 
+%  title('Original Representation Sum')
+
+  if sum(Z(:,k)) - sum(Z(:,k) & repr) >  min_class
     keep(k) = true;
   end
 end
+
 Zredux = Z(:,keep);
+
+%  subplot(1,3,3), imagesc(Zredux), colormap(gray)
+ 
+
